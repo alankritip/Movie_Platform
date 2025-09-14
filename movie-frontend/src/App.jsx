@@ -1,35 +1,40 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { useLogoutMutation } from './features/auth/authApi';
+import { logout } from './features/auth/authSlice';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const auth = useSelector((s) => s.auth);
+  const [doLogout] = useLogoutMutation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const onLogout = async () => {
+    try { await doLogout().unwrap(); } catch {}
+    dispatch(logout());
+    navigate('/');
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <header className="nav">
+        <Link to="/">Home</Link>
+        <Link to="/movies">Movies</Link>
+        {auth.user ? (
+          <>
+            <Link to={`/profile/${auth.user.id}`}>{auth.user.username}</Link>
+            <button onClick={onLogout}>Logout</button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
+          </>
+        )}
+      </header>
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
 }
-
-export default App
